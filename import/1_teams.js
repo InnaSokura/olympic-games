@@ -19,8 +19,8 @@ function createTeams(db, data) {
   });
 
   db.get("SELECT COUNT(*) FROM teams", function(err, row) {
-    const teams = Object.values(row)[0];
-    console.log(` -- Successfully created ${teams} teams.`);
+    const count = Object.values(row)[0];
+    console.log(` -- Successfully created ${count} teams.`);
   })
 }
 

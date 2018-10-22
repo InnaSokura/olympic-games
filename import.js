@@ -16,6 +16,7 @@ fs.createReadStream('./csv/athlete_events.csv')
 			delimiter: ',',
 			columns: true,
 			trim: true,
+			to: 10000,
 		})
 	)
 	.on('data', (row) => {
@@ -28,8 +29,8 @@ fs.createReadStream('./csv/athlete_events.csv')
 		console.log(` -- Successfully parsed ${data.length} lines.`);
 	
 		db.serialize(() => {
-			createTeams(db, data);
-			// createAthletes(db, data);
+			// createTeams(db, data);
+			createAthletes(db, data);
 		});
 	});
 
