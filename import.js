@@ -1,11 +1,11 @@
-const sqlite = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const fs = require('fs');
 const parse = require('csv-parse');
 
 const createTeams = require('./import/1_teams');
 const createAthletes = require('./import/2_athletes');
 
-const db = new sqlite.Database('./db/olympic_history.db');
+const db = new Database('./db/olympic_history.db');
 const data = [];
 
 console.log('Start parsing csv...');
@@ -16,7 +16,7 @@ fs.createReadStream('./csv/athlete_events.csv')
 			delimiter: ',',
 			columns: true,
 			trim: true,
-			to: 10000,
+			// to: 10000,
 		})
 	)
 	.on('data', (row) => {
@@ -28,10 +28,12 @@ fs.createReadStream('./csv/athlete_events.csv')
 	.on('end', () => {
 		console.log(` -- Successfully parsed ${data.length} lines.`);
 	
-		db.serialize(() => {
+		db.transaction(() => {
 			// createTeams(db, data);
-			createAthletes(db, data);
-		});
+			createAthletes(db, data); // 777s
+		})();
+
+		db.close();
 	});
 
 // CSV ROW DATA:
