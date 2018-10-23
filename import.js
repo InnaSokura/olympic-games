@@ -4,6 +4,7 @@ const parse = require('csv-parse');
 
 const createTeams = require('./import/1_teams');
 const createAthletes = require('./import/2_athletes');
+const createGames = require('./import/3_games');
 
 const db = new Database('./db/olympic_history.db');
 const data = [];
@@ -16,7 +17,7 @@ fs.createReadStream('./csv/athlete_events.csv')
 			delimiter: ',',
 			columns: true,
 			trim: true,
-			// to: 10000,
+			to: 10000,
 		})
 	)
 	.on('data', (row) => {
@@ -30,7 +31,8 @@ fs.createReadStream('./csv/athlete_events.csv')
 	
 		db.transaction(() => {
 			// createTeams(db, data);
-			createAthletes(db, data); // 777s
+			// createAthletes(db, data);
+			createGames(db, data);
 		})();
 
 		db.close();

@@ -25,8 +25,9 @@ function createTeams(db, csvData) {
         }
       }
 		};
-	})(preparedData);
-
+  })(preparedData);
+  
+	// on 'teams' insert complete
   const res = db.prepare("SELECT COUNT(*) FROM teams").get();
   const count = Object.values(res)[0];
   console.log(` -- Successfully created ${count} teams.`);
