@@ -1,7 +1,7 @@
 const uniqBy = require('lodash.uniqby');
 const integerOrNull = require('./utils').integerOrNull;
 
-function createTeams(db, csvData) {
+function createAthletes(db, csvData) {
 	db.transaction(() => {
 		db.prepare('DELETE FROM athletes').run();
 		db.prepare('DELETE FROM sqlite_sequence WHERE name="athletes"').run();
@@ -45,4 +45,4 @@ function prepareParams(line) {
 	return JSON.stringify(params);
 }
 
-module.exports = createTeams;
+module.exports = createAthletes;

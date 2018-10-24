@@ -2,7 +2,7 @@ const uniqBy = require('lodash.uniqby');
 
 function createTeams(db, csvData) {  
 	db.transaction(() => {
-    db.prepare('DELETE FROM teams').run;
+    db.prepare('DELETE FROM teams').run();
     db.prepare('DELETE FROM sqlite_sequence WHERE name="teams"').run();
   })();
 

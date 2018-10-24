@@ -9,7 +9,9 @@ function createGames(db, csvData) {
 
   console.log('Create games...');
 
-  const data = uniqBy(csvData, _ => `${_['Season']} ${_['Year']} ${_['City']}`);
+  const data = joinCities(
+    uniqBy(csvData, _ => `${_['Season']} ${_['Year']} ${_['City']}`)
+  );
   const insert = db.prepare("INSERT INTO games (year, season, city) VALUES ($year, $season, $city)");
 
   db.transaction((rows) => {
@@ -18,8 +20,8 @@ function createGames(db, csvData) {
       try {
         insert.run({
           year: integerOrNull(row['Year']),
-          season: { summer: 0, winter: 1 }[row['Season'].toLowerCase()],
-          city: row['City'],
+          season: getSeasonEnum(row['Season']),
+          city: row.cities,
         });
       } catch(err) {
         if (err.code !== 'SQLITE_CONSTRAINT_UNIQUE') {
@@ -35,4 +37,23 @@ function createGames(db, csvData) {
   console.log(` -- Successfully created ${count} games.`);
 }
 
-module.exports = createGames;
+module.exports = {
+  default: createGames,
+  getSeasonEnum,
+};
+
+// unique by seaonn and year
+// add field cities with aggregated cities
+function joinCities(games) {
+  games.forEach((game) => {
+    game.cities = games
+      .filter(_ => _['Year'] === game['Year'] && _['Season'] === game['Season'])
+      .map(_ => _['City'])
+      .join`, `;
+  });
+  return uniqBy(games, _ => `${_['Season']} ${_['Year']}`);
+}
+
+function getSeasonEnum(season) {
+  return { summer: 0, winter: 1 }[season.toLowerCase()];
+}
