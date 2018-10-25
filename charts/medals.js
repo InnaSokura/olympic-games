@@ -1,4 +1,5 @@
 const Database = require('better-sqlite3');
+const buildChart = require('./chartBuilder');
 const db = new Database('./db/olympic_history.db', { readonly: true });
 const params = process.argv.slice(2);
 
@@ -16,9 +17,6 @@ params.forEach((input) => {
   NOC = param.toUpperCase();
 });
 
-console.log({ SEASON, NOC, MEDAL });
-console.log('\n');
-
 if (![0, 1].includes(SEASON)) {
   return console.log(' -- warning: param SEASON is required!');
 }
@@ -32,7 +30,7 @@ const results = db.prepare(`
     SELECT noc_name, y FROM teams
       LEFT JOIN athletes ON athletes.team_id = teams.id
       INNER JOIN (
-        SELECT * from results WHERE results.medal = $MEDAL
+        SELECT * from results WHERE results.medal ${MEDAL ? '= $MEDAL' : 'IN (1, 2, 3)'}
       ) AS RES ON RES.athlete_id = athletes.id 
       INNER JOIN (
         SELECT id, year y from games WHERE games.season = $SEASON
@@ -47,4 +45,12 @@ const results = db.prepare(`
   MEDAL
 });
 
-console.log(results);
+console.log(`----------------------
+  "AMOUNT OF MEDALS"  
+----------------------
+    SEASON: ${['SUMMER', 'WINTER'][SEASON]}
+    NOC:    ${NOC}
+    MEDAL:  ${['NA', 'GOLD', 'SILVER', 'BRONZE'][MEDAL] || 'ALL TYPES'}
+`);
+
+buildChart(results, ['year', 'medals']);
