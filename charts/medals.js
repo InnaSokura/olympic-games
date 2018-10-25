@@ -1,40 +1,50 @@
 const Database = require('better-sqlite3');
 const db = new Database('./db/olympic_history.db', { readonly: true });
-
-let SEASON;
-let NOC;
-let MEDAL; 
-
-// Params: season [winter|summer] NOC medal_name [gold|silver|bronze] (in any order).
 const params = process.argv.slice(2);
+
+// Params: 
+//   season [winter|summer], 
+//   NOC, 
+//   medal_name [gold|silver|bronze] 
+// (in any order).
+let SEASON, NOC, MEDAL;
 
 params.forEach((input) => {
   const param = input.toLowerCase();
-  if (['winter', 'summer'].includes(param)) SEASON = param; else
-  if (['gold', 'silver', 'bronze'].includes(param)) MEDAL = param; else 
-  NOC = param;
+  if (['winter', 'summer'].includes(param)) SEASON = { summer: 0, winter: 1 }[param]; else
+  if (['gold', 'silver', 'bronze'].includes(param)) MEDAL = { 'na': 0, 'gold': 1, 'silver': 2, 'bronze': 3 }[param]; else 
+  NOC = param.toUpperCase();
 });
 
-if (!SEASON) return console.log(' -- warning: param SEASON is required!');
-if (!NOC) return console.log(' -- warning: param NOC is required!');
+console.log({ SEASON, NOC, MEDAL });
+console.log('\n');
 
-// SELECT
-//  a,
-//  b
-// FROM
-//  A
-// LEFT JOIN B ON A.f = B.f
-// WHERE search_condition;
+if (![0, 1].includes(SEASON)) {
+  return console.log(' -- warning: param SEASON is required!');
+}
+if (!NOC) {
+  return console.log(' -- warning: param NOC is required!');
+}
+
 const results = db.prepare(`
-  (
-    SELECT * FROM results 
-    LEFT JOIN athletes ON athletes.id = results.athlete_id
-  ) AS rt
-  LEFT JOIN teams ON teams.id = rt.team_id
-  WHERE noc_name = (?)
-`).all(NOC);
+  SELECT DISTINCT year, COUNT(noc_name) medals from games
+  LEFT JOIN (
+    SELECT noc_name, y FROM teams
+      LEFT JOIN athletes ON athletes.team_id = teams.id
+      INNER JOIN (
+        SELECT * from results WHERE results.medal = $MEDAL
+      ) AS RES ON RES.athlete_id = athletes.id 
+      INNER JOIN (
+        SELECT id, year y from games WHERE games.season = $SEASON
+      ) AS GAM ON RES.game_id = GAM.id
+    WHERE noc_name = $NOC
+  ) AS MEDALS ON year = MEDALS.y
+  GROUP BY year 
+  ORDER BY year ASC
+`).all({
+  NOC,
+  SEASON,
+  MEDAL
+});
 
-console.log('results', results.length);
-
-console.log("Building 'medals' chart...");
-console.log(' -- params: ', { SEASON, NOC, MEDAL });
+console.log(results);
