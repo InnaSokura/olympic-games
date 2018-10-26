@@ -1,9 +1,9 @@
 function buildChart(data, columns) {
   const max = Math.max(...data.map(_ => _[columns[1]]));
-  const barWidth = 80;
+  const barWidth = 100;
 
   console.log(`${columns[0].padEnd(5)} ${columns[1]}`.toUpperCase());
-  console.log('-'.repeat(4) + '  ' + '-'.repeat(80));
+  console.log('-'.repeat(4) + '  ' + '-'.repeat(barWidth));
 
   data.forEach((row) => {
     const label = String(row[columns[0]]).toUpperCase().padEnd(5);
