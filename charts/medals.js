@@ -3,12 +3,9 @@ const buildChart = require('./chartBuilder');
 const db = new Database('./db/olympic_history.db', { readonly: true });
 const params = process.argv.slice(2);
 
-// Params: 
-//   season [winter|summer], 
-//   NOC, 
-//   medal_name [gold|silver|bronze] 
-// (in any order).
-let SEASON, NOC, MEDAL;
+let SEASON;   // [winter|summer] is required
+let NOC;      // is required
+let MEDAL;    // [gold|silver|bronze] 
 
 params.forEach((input) => {
   const param = input.toLowerCase();
@@ -45,6 +42,7 @@ const results = db.prepare(`
   MEDAL
 });
 
+console.clear();
 console.log(`----------------------
   "AMOUNT OF MEDALS"  
 ----------------------

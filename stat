@@ -1,0 +1,13 @@
+#!/bin/bash  
+
+if [ $1 = 'medals' ]; then
+  node ./charts/medals.js $2 $3 $4
+  exit
+fi
+
+if [ $1 = 'top-teams' ]; then
+  node ./charts/top-teams.js $2 $3 $4
+  exit
+fi
+
+echo "Invalid chart name '$1'! [ medals | top-teams ]"

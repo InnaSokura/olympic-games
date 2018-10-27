@@ -3,17 +3,9 @@ const buildChart = require('./chartBuilder');
 const db = new Database('./db/olympic_history.db', { readonly: true });
 const params = process.argv.slice(2);
 
-// If year is not specified take results for all time.
-// If medal type is not specified take results for all types.
-// Show resulting chart only for those teams, that have more than average result: 
-// if average amount for all teams is 200 - show only teams with more than 200 medals.
-
-// Params: 
-//   season [winter|summer] - is required
-//   year 
-//   medal_type [gold|silver|bronze] 
-// (in any order).
-let SEASON, YEAR, MEDAL;
+let SEASON;   // [winter|summer] - is required
+let YEAR;     // 1900..2018
+let MEDAL;    // [gold|silver|bronze] 
 
 params.forEach((input) => {
   const param = input.toLowerCase();
@@ -40,6 +32,7 @@ const results = db.prepare(`
   MEDAL
 });
 
+console.clear();
 console.log(`----------------------
      "TOP TEAMS"  
 ----------------------
