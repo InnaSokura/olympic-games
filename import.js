@@ -1,6 +1,6 @@
 const Database = require('better-sqlite3');
 const fs = require('fs');
-const parse = require('csv-parse');
+const lineReader = require('readline');
 
 const createTeams = require('./import/1_teams');
 const createAthletes = require('./import/2_athletes');
@@ -14,25 +14,16 @@ const data = [];
 const startTime = Date.now();
 
 console.log('Parsing CSV...');
+let index = 0;
 
-fs.createReadStream('./csv/athlete_events.csv')
-	.pipe(
-		parse({
-			delimiter: ',',
-			columns: true,
-			trim: true,
-			// to: 10000,
-		})
-	)
-	.on('data', (row) => {
-		data.push(row);
-	})
-	.on('error', (err) => {
-		console.log('Error while reading file', err);
-	})
-	.on('end', () => {
-		console.log(` -- Successfully parsed ${data.length} lines.`);
-	
+lineReader
+  .createInterface({
+    input: fs.createReadStream('./csv/athlete_events.csv')
+  })
+  .on('line', onEachLine)
+  .on('close', () => {
+		console.log(` -- Successfully parsed ${data.length} lines. (${(Date.now() - startTime) / 1000}s)`);
+
 		db.transaction(() => {
 			createTeams(db, data);
 			createAthletes(db, data);
@@ -42,12 +33,41 @@ fs.createReadStream('./csv/athlete_events.csv')
 			createResults(db, data);
 		})();
 
-		const endTime = Date.now();
 		console.log(`Import finished!`);
-		console.log(` -- Total time: ${(endTime - startTime)/1000}s.`);
-
+		console.log(` -- Total time: ${(Date.now() - startTime) / 1000}s.`);
 		db.close();
+  });
+
+function onEachLine(line) {
+	const parsedLine = line
+		.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/g)                      // split by comma that not in quotes
+		.map((str) =>                                                    
+			str.charAt(0) === '"' &&                                        // remove 1st and last quotes from string
+			str.charAt(str.length - 1) === '"' 
+				? str.substr(1, str.length - 2) 
+				: str
+		);
+
+	index && data.push({
+		ID:       parsedLine[0],
+		Name:     parsedLine[1],
+		Sex:      parsedLine[2],
+		Age:      parsedLine[3],
+		Height:   parsedLine[4],
+		Weight:   parsedLine[5],
+		Team:     parsedLine[6],
+		NOC:      parsedLine[7],
+		Games:    parsedLine[8],
+		Year:     parsedLine[9],
+		Season:   parsedLine[10],
+		City:     parsedLine[11],
+		Sport:    parsedLine[12],
+		Event:    parsedLine[13],
+		Medal:    parsedLine[14],
 	});
+
+	index++;
+}
 
 // CSV ROW DATA:
 // ============================================

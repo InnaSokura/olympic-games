@@ -1,5 +1,4 @@
 const uniqBy = require('lodash.uniqby');
-const integerOrNull = require('./utils').integerOrNull;
 
 function createAthletes(db, csvData) {
 	db.transaction(() => {
@@ -11,8 +10,8 @@ function createAthletes(db, csvData) {
 
 	const data = uniqBy(csvData, 'ID');
 	const insert = db.prepare(
-		`INSERT INTO athletes (id, full_name, age, sex, params, team_id) 
-		 VALUES ($id, $full_name, $age, $sex, $params, $team_id)`
+		`INSERT INTO athletes (id, full_name, year_of_birth, sex, params, team_id) 
+		 VALUES ($id, $full_name, $year_of_birth, $sex, $params, $team_id)`
 	);
 
 	const teams = db.prepare("SELECT * FROM teams").all();
@@ -21,7 +20,7 @@ function createAthletes(db, csvData) {
 		return {
 			id: row['ID'],
 			full_name: row['Name'],
-			age: integerOrNull(row['Age']),
+			year_of_birth: getYearOfBirth(row),
 			sex: { M: 0, F: 1 }[row['Sex']],
 			params: prepareParams(row),
 			team_id: team.id
@@ -43,6 +42,13 @@ function prepareParams(line) {
 	if (line['Weight'] && line['Weight'] !== 'NA') params.weight = line['Weight'];
 	if (line['Height'] && line['Height'] !== 'NA') params.height = line['Height'];
 	return JSON.stringify(params);
+}
+
+function getYearOfBirth(line) {
+	const yearOfBirth = Number(line['Year']) - Number(line['Age']);
+	return Number.isInteger(yearOfBirth) 
+		? yearOfBirth 
+		: null;
 }
 
 module.exports = createAthletes;
